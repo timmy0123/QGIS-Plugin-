@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/plugins/Dig_CrossSection" >
+        <file>icon.png</file>
+    </qresource>
+</RCC>
