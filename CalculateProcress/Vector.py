@@ -48,9 +48,8 @@ class VectorProcress:
                                                 "ESRI Shapefile",
                                                 onlySelected=True)
         
-        self.__SelectAreaLayerPath = savename
-        self.__SelectAreaLayer = QgsVectorLayer(self.__SelectAreaLayerPath, "Airports layer", "ogr")
-        #self.Merge_features()
+        self.__SelectAreaLayer = self.Fix_Error(savename)
+        self.__SelectAreaLayerPath = self.__SelectAreaLayer.source()
 
 
     def Generate_New_Extent_Layer(self):
@@ -63,7 +62,7 @@ class VectorProcress:
         
         # Generate new shpfile
         savename = self.__SelectAreaLayerPath[:-4]
-        savename = savename + "New.shp"
+        savename = savename + "Buffer.shp"
 
         # create fields
         layerFields = QgsFields()
@@ -125,29 +124,42 @@ class VectorProcress:
 
 
     def Merge_features(self):
+        # Generate new shpfile
+        savename = self.__SelectAreaLayerPath[:-4]
+        savename = savename + "Merge.shp"
+
         geom = None
         for feature in self.__SelectAreaLayer.getFeatures():
             if geom == None: geom = feature.geometry()
             else:geom = geom.combine(feature.geometry())
-        points = []
-        for i in geom.asPolygon():
-            for point in i:
-                points.append(point)
-        print(points)
-        
+
         layerFields = QgsFields()
         layerFields.append(QgsField('ID', QVariant.Int))
-        writer = QgsVectorFileWriter(self.__SelectAreaLayerPath, 
+
+        writer = QgsVectorFileWriter(savename, 
                                     'UTF-8', 
                                     layerFields,
                                     QgsWkbTypes.Polygon,
                                     self.__SelectAreaLayer.crs(),
                                     'ESRI Shapefile')
+
+        
         feat = QgsFeature()
-        feat.setGeometry(QgsGeometry.fromPolygonXY([points]))
+        feat.setGeometry(geom)
         feat.setAttributes([1])
         writer.addFeature(feat)
         del(writer)
+        self.__SelectAreaLayerPath = savename
         
+    def Fix_Error(self,layerpath):
+        savename = layerpath[:-4]
+        savename = savename + "Fixed.shp"
+        param = {"INPUT": layerpath,
+                 "OUTPUT":savename}
+        processing.run("native:fixgeometries",param)
 
+        path = savename
+        layer = QgsVectorLayer(path, "Airports layer", "ogr")
+
+        return layer
 

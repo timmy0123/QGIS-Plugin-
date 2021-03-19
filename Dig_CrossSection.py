@@ -277,10 +277,12 @@ class DigCrossSection:
             print("shapfile procress")
             from .CalculateProcress.Vector import VectorProcress
             VecterLayer = VectorProcress(self.shp_layer,self.Area_layer)
+            
 
             if VecterLayer.Check_Select_Area(): VecterLayer.Generate_Select_Area()
 
             VecterLayer.Channel_Buffer()
+            VecterLayer.Merge_features()
             VecterLayer.Generate_New_Extent_Layer()
             
             print("DEM procress")
@@ -300,6 +302,7 @@ class DigCrossSection:
 
             print("start to merge calculated layer to origin")
 
+            self.Area_layer = VecterLayer.Fix_Error(self.Area_layer.source())
             Splitresult = grassfile.Split_Select_Basin_from_Buffer(basinresult["output"],VecterLayer.Get_Area_Path(),0,0)
             Difreault = VecterLayer.Difference(self.Area_layer.source(),save1)
             Mergeresult = VecterLayer.Merge_Layer(save1,Splitresult["output"],save2)
@@ -307,4 +310,4 @@ class DigCrossSection:
             endtime = time.time()
             print("cost time:",(endtime - strtime))
             #self.iface.addVectorLayer(save2, "Stream")
-            
+           
